@@ -105,7 +105,12 @@ client:start(function(event)
             print('yasio - ' .. result)
         elseif(t == yasio.YEK_CONNECT_RESPONSE) then -- connect responseType
             if(event:status() == 0) then
-                print("yasio - connect server succeed.")
+                local t = event:transport()
+                local local_ep = t:local_endpoint()
+                local remote_ep = t:remote_endpoint()
+                print(string.format("yasio - connect server succeed, local_ep=(%s:%u) remote_ep=(%s:%u) ",
+                  local_ep:ip(), local_ep:port(),
+                  remote_ep:ip(), remote_ep:port()))
                 -- local transport = event:transport()
                 -- local requestData = "GET /index.htm HTTP/1.1\r\nHost: www.ip138.com\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36\r\nAccept: */*;q=0.8\r\nConnection: Close\r\n\r\n"
                 -- client:write(transport, obs)

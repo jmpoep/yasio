@@ -158,6 +158,11 @@ YASIO_LUA_API int luaopen_yasio(lua_State* L)
 #  else
   auto yasio_lib = state_view.create_named_table("yasio");
 #  endif
+  yasio_lib.new_usertype<ip::endpoint>(
+      "endpoint", "ip", [](const ip::endpoint& ep) { return ep.ip(); }, "port", [](const ip::endpoint& ep) { return ep.port(); });
+  yasio_lib.new_usertype<io_transport>(
+      "io_transport", "remote_endpoint", [](io_transport* transport) { return transport->remote_endpoint(); }, "local_endpoint",
+      [](io_transport* transport) { return transport->local_endpoint(); });
   yasio_lib.new_usertype<io_event>(
       "io_event", "kind", &io_event::kind, "status", &io_event::status, "passive", [](io_event* e) { return !!e->passive(); }, "packet",
       [](io_event* ev, sol::variadic_args args, sol::this_state s) {
@@ -172,9 +177,9 @@ YASIO_LUA_API int luaopen_yasio(lua_State* L)
           case lyasio::BUFFER_RAW:
             return sol::make_object(L, cxx17::string_view{packet_data(pkt), packet_len(pkt)});
           case lyasio::BUFFER_FAST:
-            return sol::make_object(L, cxx14::make_unique<yasio::fast_ibstream>(forward_packet((packet_t &&) pkt)));
+            return sol::make_object(L, cxx14::make_unique<yasio::fast_ibstream>(forward_packet((packet_t&&)pkt)));
           default:
-            return sol::make_object(L, cxx14::make_unique<yasio::ibstream>(forward_packet((packet_t &&) pkt)));
+            return sol::make_object(L, cxx14::make_unique<yasio::ibstream>(forward_packet((packet_t&&)pkt)));
         }
       },
       "cindex", &io_event::cindex, "transport", &io_event::transport
@@ -596,7 +601,7 @@ YASIO_LUA_API int luaopen_yasio(lua_State* L)
                                                           auto& pkt = ev->packet();
                                                           if (is_packet_empty(pkt))
                                                             return std::unique_ptr<yasio::ibstream>{};
-                                                          return cxx14::make_unique<yasio::ibstream>(forward_packet((packet_t &&) pkt));
+                                                          return cxx14::make_unique<yasio::ibstream>(forward_packet((packet_t&&)pkt));
                                                         })
                                      .addStaticFunction("raw_packet",
                                                         [](io_event* ev) {
@@ -610,7 +615,7 @@ YASIO_LUA_API int luaopen_yasio(lua_State* L)
                                                           auto& pkt = ev->packet();
                                                           if (is_packet_empty(pkt))
                                                             return std::unique_ptr<yasio::fast_ibstream>{};
-                                                          return cxx14::make_unique<yasio::fast_ibstream>(forward_packet((packet_t &&) pkt));
+                                                          return cxx14::make_unique<yasio::fast_ibstream>(forward_packet((packet_t&&)pkt));
                                                         })
                                      .addFunction("cindex", &io_event::cindex)
                                      .addFunction("transport", &io_event::transport)
@@ -618,7 +623,7 @@ YASIO_LUA_API int luaopen_yasio(lua_State* L)
 #  if !YASIO_LUA_ENABLE_GLOBAL
   state["yasio"] = yasio_lib;
 #  endif
-  bool succeed   = state.dostring(R"(
+  bool succeed = state.dostring(R"(
 local yasio = yasio;
 yasio.io_event.packet = function(self, buffer_type)
     if buffer_type == yasio.BUFFER_RAW then
