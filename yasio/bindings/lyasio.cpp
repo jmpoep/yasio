@@ -182,7 +182,7 @@ YASIO_LUA_API int luaopen_yasio(lua_State* L)
             return sol::make_object(L, cxx14::make_unique<yasio::ibstream>(forward_packet((packet_t&&)pkt)));
         }
       },
-      "cindex", &io_event::cindex, "transport", &io_event::transport
+      "cindex", &io_event::cindex, "source_id", &io_event::source_id, "transport", &io_event::transport
 #  if !defined(YASIO_MINIFY_EVENT)
       ,
       "timestamp", &io_event::timestamp
